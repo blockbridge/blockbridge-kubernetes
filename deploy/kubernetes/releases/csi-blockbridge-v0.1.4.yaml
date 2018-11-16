@@ -1,0 +1,458 @@
+# Copyright 2018 Blockbridge Networks
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+ 
+# Configuration to deploy release version of the CSI Blockbridge
+# plugin (https://github.com/blockbridge/csi-blockbridge) compatible with
+# Kubernetes >=v1.10
+#
+# example usage: kubectl create -f <this_file>
+
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: blockbridge-gp
+  namespace: kube-system
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: com.blockbridge.csi.eps
+# ---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: blockbridge-tls
+#   namespace: kube-system
+# provisioner: com.blockbridge.csi.eps
+# parameters:
+#   transportEncryption: tls
+# ---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: blockbridge-xfs
+#   namespace: kube-system
+# provisioner: com.blockbridge.csi.eps
+# parameters:
+#   fsType: xfs
+#   transportEncryption: tls
+# ---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: blockbridge-ssd
+#   namespace: kube-system
+# provisioner: com.blockbridge.csi.eps
+# parameters:
+#   storageQuery: '+ssd'
+# ---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: blockbridge-piops
+#   namespace: kube-system
+# provisioner: com.blockbridge.csi.eps
+# parameters:
+#   serviceType: piops
+#   iops: '100'
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: bb-csi-attacher
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: bb-external-attacher-runner
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["get", "list", "watch", "update"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: bb-csi-attacher-role
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: bb-csi-attacher
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: bb-external-attacher-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+# needed for StatefulSet
+kind: Service
+apiVersion: v1
+metadata:
+  name: csi-attacher-bbplugin
+  namespace: kube-system
+  labels:
+    app: csi-attacher-bbplugin
+spec:
+  selector:
+    app: csi-attacher-bbplugin
+  ports:
+    - name: dummy
+      port: 12345
+---
+kind: StatefulSet
+apiVersion: apps/v1beta1
+metadata:
+  name: csi-attacher-bbplugin
+  namespace: kube-system
+spec:
+  serviceName: "csi-attacher-bbplugin"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: csi-attacher-bbplugin
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: manager
+                operator: In
+                values:
+                - "true"
+      serviceAccount: bb-csi-attacher
+      containers:
+        - name: bb-csi-attacher
+          image: quay.io/k8scsi/csi-attacher:v0.2.0
+          args:
+            - "--v=5"
+            - "--csi-address=$(ADDRESS)"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+        - name: blockbridge-csi-plugin
+          image: registry.blockbridge.com/blockbridge/bb-csi-plugin:v0.1.4
+          args :
+            - "--endpoint=$(CSI_ENDPOINT)"
+            - "--token=$(BLOCKBRIDGE_API_KEY)"
+            - "--url=$(BLOCKBRIDGE_API_URL)"
+          env:
+            - name: CSI_ENDPOINT
+              value: unix:///var/lib/csi/sockets/pluginproxy/csi.sock
+            - name: BLOCKBRIDGE_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: blockbridge
+                  key: api-url
+            - name: BLOCKBRIDGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: blockbridge
+                  key: access-token
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+      volumes:
+        - name: socket-dir
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bb-csi-provisioner
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: bb-external-provisioner-runner
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["list", "watch", "create", "update", "patch"]
+    
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: bb-csi-provisioner-role
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: bb-csi-provisioner
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: bb-external-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+# needed for StatefulSet
+kind: Service
+apiVersion: v1
+metadata:
+  name: csi-provisioner-bbplugin
+  namespace: kube-system
+  labels:
+    app: csi-provisioner-bbplugin
+spec:
+  selector:
+    app: csi-provisioner-bbplugin
+  ports:
+    - name: dummy
+      port: 12345
+---
+kind: StatefulSet
+apiVersion: apps/v1beta1
+metadata:
+  name: csi-provisioner-bbplugin
+  namespace: kube-system
+spec:
+  serviceName: "csi-provisioner-bbplugin"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: csi-provisioner-bbplugin
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: manager
+                operator: In
+                values:
+                - "true"
+      serviceAccount: bb-csi-provisioner
+      containers:
+        - name: bb-csi-provisioner
+          image: quay.io/k8scsi/csi-provisioner:v0.2.0
+          args:
+            - "--provisioner=com.blockbridge.csi.eps"
+            - "--csi-address=$(ADDRESS)"
+            - "--v=5"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+        - name: blockbridge-csi-plugin
+          image: registry.blockbridge.com/blockbridge/bb-csi-plugin:v0.1.4
+          args :
+            - "--endpoint=$(CSI_ENDPOINT)"
+            - "--token=$(BLOCKBRIDGE_API_KEY)"
+            - "--url=$(BLOCKBRIDGE_API_URL)"
+          env:
+            - name: CSI_ENDPOINT
+              value: unix:///var/lib/csi/sockets/pluginproxy/csi.sock
+            - name: BLOCKBRIDGE_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: blockbridge
+                  key: api-url
+            - name: BLOCKBRIDGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: blockbridge
+                  key: access-token
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+      volumes:
+        - name: socket-dir
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-bbplugin
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-bbplugin
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "update"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["get", "list", "watch", "update"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-bbplugin
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: csi-bbplugin
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: csi-bbplugin
+  apiGroup: rbac.authorization.k8s.io          
+
+---
+kind: DaemonSet
+apiVersion: apps/v1beta2
+metadata:
+  name: csi-bbplugin
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: csi-bbplugin
+  template:
+    metadata:
+      labels:
+        app: csi-bbplugin
+    spec:
+      serviceAccount: csi-bbplugin
+      hostNetwork: true
+      containers:
+        - name: driver-registrar
+          image: quay.io/k8scsi/driver-registrar:v0.2.0
+          args:
+            - "--v=5"
+            - "--csi-address=$(ADDRESS)"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi/
+              # TODO(arslan): the registrar is not implemented yet
+              # - name: registrar-socket-dir
+              #   mountPath: /var/lib/csi/sockets/
+        - name: csi-bbplugin
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN", "NET_ADMIN", "IPC_LOCK", "IPC_OWNER"]
+            allowPrivilegeEscalation: true
+          image: registry.blockbridge.com/blockbridge/bb-csi-plugin:v0.1.4
+          args :
+            - "--endpoint=$(CSI_ENDPOINT)"
+            - "--token=$(BLOCKBRIDGE_API_KEY)"
+            - "--url=$(BLOCKBRIDGE_API_URL)"
+          env:
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+            - name: BLOCKBRIDGE_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: blockbridge
+                  key: api-url
+            - name: BLOCKBRIDGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: blockbridge
+                  key: access-token
+            - name: BLOCKBRIDGE_ISCSIADM_COMMAND
+              value: /host-sbin/iscsiadm
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet
+              # needed so that any mounts setup inside this container are
+              # propagated back to the host machine.
+              mountPropagation: "Bidirectional"
+            - mountPath: /dev
+              name: device-dir
+            - mountPath: /sys
+              name: sysfs-dir
+            - mountPath: /host-sbin
+              name: host-sbin
+            - mountPath: /etc/iscsi
+              name: etc-iscsi-dir
+      volumes:
+        # TODO(arslan): the registar is not implemented yet
+        #- name: registrar-socket-dir
+        #  hostPath:
+        #    path: /var/lib/kubelet/device-plugins/
+        #    type: DirectoryOrCreate
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/com.blockbridge.csi.eps
+            type: DirectoryOrCreate
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet
+            type: Directory
+        - name: device-dir
+          hostPath:
+            path: /dev
+        - name: sysfs-dir
+          hostPath:
+            path: /sys
+        - name: host-sbin
+          hostPath:
+            path: /sbin
+        - name: etc-iscsi-dir
+          hostPath:
+            path: /etc/iscsi
