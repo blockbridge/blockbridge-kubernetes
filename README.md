@@ -75,7 +75,7 @@ Server Version: version.Info{Major:"1", Minor:"10", GitVersion:"v1.10.3", GitCom
 
 Create a secret containing the Blockbridge API endpoint URL and access token.
 
-Replace BLOCKBRIDGE_API_URL and BLOCKBRIDGE_ACCESS_TOKEN with the correct values for the Blockbridge controlplane.
+Replace BLOCKBRIDGE_API_URL and BLOCKBRIDGE_API_KEY with the correct values for the Blockbridge controlplane.
 
 ```
 $ cat > secret.yml <<- EOF
@@ -86,7 +86,7 @@ metadata:
   namespace: kube-system
 stringData:
   api-url: '{{ BLOCKBRIDGE_API_URL }}'
-  access-token: '{{ BLOCKBRIDGE_ACCESS_TOKEN }}'
+  access-token: '{{ BLOCKBRIDGE_API_KEY }}'
 EOF
 ```
 
