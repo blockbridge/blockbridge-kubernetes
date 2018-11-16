@@ -16,8 +16,9 @@ The CSI specification is currently in **beta** in Kubernetes. As such, the Block
 * Dynamic volume provisioning
 * Automatic volume failover and mobility across the cluster
 * Integration with RBAC for multi-namespace, multi-tenant deployments
-* Quality of Service guarantees
-* Built-in transport encryption (TLS) capabilities and always-on data encryption at rest
+* Quality of Service
+* Encryption in-flight for control (always) and data (optional)
+* Encryption at rest
 * Multiple Storage Classes provide programmable, deterministic storage characteristics
 
 ## Supported Kubernetes environments
