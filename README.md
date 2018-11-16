@@ -39,7 +39,7 @@ The following minimum requirements must be met to use the Blockbridge driver in 
 * (if you use Docker) the Docker daemon of the cluster nodes must allow shared
   mounts
   
-  See [CSI Setup](https://kubernetes-csi.github.io/docs/Setup.html) for more information.
+See [CSI Setup](https://kubernetes-csi.github.io/docs/Setup.html) for more information.
 
 ## Blockbridge Driver Configuration
 
