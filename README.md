@@ -140,7 +140,8 @@ The Blockbridge CSI Driver is deployed using the [recommended mechanism](https:/
 
 A default "general purpose" StorageClass called `blockbridge-gp` is created. This is the **default** StorageClass for dynamic provisioning of storage volumes. The general purpose StorageClass provisions using the default Blockbridge storage template configured in the Blockbridge controlplane. 
 
-There are a variety of additional storage class configuration options available. Several example storage classes are shown in the `csi-storageclass.yaml`. Download, edit, and apply additional storage classes as needed.
+There are a variety of additional storage class configuration options available, including:
+
 
 Additional configuration options include:
 
@@ -149,15 +150,38 @@ Additional configuration options include:
 3. Using a named service template
 4. Using explicitly specified provisioned IOPS
 
-#### 3. Test and verify:
-
-Create a PersistentVolumeClaim. This makes sure a volume is created and provisioned on your behalf:
+Several example storage classes are shown in `csi-storageclass.yaml`. Download, edit, and apply additional storage classes as needed.
 
 ```
+$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/csi-storageclass.yaml
+```
+
+Edit `csi-storageclass.yaml` as desired, and apply the new storage classes:
+
+```
+$ kubectl apply -f csi-storageclass.yaml
+```
+
+### Test and verify: PersistentVolumeClaim
+
+Blockbridge storage volumes are now available via Kubernetes persistent volume claims (PVC).
+
+Create a PersistentVolumeClaim. This dynamically provisions a volume in Blockbridge and makes it accessible to applications.
+
+Create the PVC:
+```
+$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml
+```
+
+Alternatively, download the example volume yaml, modify as needed, and apply:
+```
+$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml
+$ cat csi-pvc.yaml
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: csi-pvc
+  name: csi-pvc-blockbridge-example
 spec:
   accessModes:
   - ReadWriteOnce
@@ -165,43 +189,64 @@ spec:
     requests:
       storage: 5Gi
   storageClassName: blockbridge-gp
+$ kubectl apply -f ./csi-pvc.yaml
 ```
 
-After that create a Pod that refers to this volume. When the Pod is created, the volume will be attached, formatted and mounted to the specified Container
+### Test and verify: Application
 
+Create a Pod (application) that utilizes the example volume. When the Pod is created, the volume will be attached, formatted and mounted, making it available to the specified application.
+
+Create the application:
 ```
+$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-app.yaml
+```
+
+Alternatively, download the application yaml, modify as needed, and apply:
+```
+$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/examples/csi-app.yaml
+$ cat csi-app.yaml
+---
 kind: Pod
 apiVersion: v1
 metadata:
-  name: my-csi-app
+  name: blockbridge-demo
 spec:
   containers:
     - name: my-frontend
       image: busybox
       volumeMounts:
       - mountPath: "/data"
-        name: my-do-volume
+        name: my-blockbridge-volume
+      command: [ "sleep", "1000000" ]
+    - name: my-middleend
+      image: busybox
+      volumeMounts:
+      - mountPath: "/data"
+        name: my-blockbridge-volume
       command: [ "sleep", "1000000" ]
   volumes:
-    - name: my-do-volume
+    - name: my-blockbridge-volume
       persistentVolumeClaim:
-        claimName: csi-pvc 
+        claimName: csi-pvc-blockbridge-example
+
 ```
 
 Check if the pod is running successfully:
 
+```
+$ kubectl describe pods/blockbridge-demo
+```
 
-```
-$ kubectl describe pods/my-csi-app
-```
+### Test and Verify: Write Data
 
 Write inside the app container:
 
 ```
-$ kubectl exec -ti my-csi-app /bin/sh
+$ kubectl exec -ti blockbridge-demo -c my-frontend /bin/sh
 / # touch /data/hello-world
 / # exit
-$ kubectl exec -ti my-csi-app /bin/sh
+$ kubectl exec -ti blockbridge-demo -c my-middleend /bin/sh
 / # ls /data
 hello-world
 ```
+
