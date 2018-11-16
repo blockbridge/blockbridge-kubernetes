@@ -38,6 +38,8 @@ The following minimum requirements must be met to use the Blockbridge driver in 
 * MountPropagation must be enabled (default to true since version 1.10)
 * (if you use Docker) the Docker daemon of the cluster nodes must allow shared
   mounts
+  
+  See [CSI Setup](https://kubernetes-csi.github.io/docs/Setup.html) for more information.
 
 ## Blockbridge Driver Configuration
 
@@ -115,32 +117,37 @@ $ kubectl -n kube-system get secrets
 blockbridge                                      Opaque                                2         1h
 ```
 
-#### 2. Deploy the CSI plugin and sidecars:
+### Deploy the Blockbridge Driver
 
-Before you continue, be sure to checkout to a [tagged
-release](https://github.com/blockbridge/csi-blockbridge/releases). For
-example, to use the version `v0.1.4` you can execute the following command:
+Deploy the Blockbridge Driver as a DaemonSet / StatefulSet using `kubectl`.
+
+The latest version of the driver is applied:
 
 ```
-$ kubectl apply -f https://raw.githubusercontent.com/blockbridge/csi-blockbridge/master/deploy/kubernetes/releases/csi-blockbridge-v0.1.4.yaml
+$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-blockbridge.yaml
 ```
 
-A new storage class will be created with the name `blockbridge-gp` which is
-responsible for dynamic provisioning. This is set to **"default"** for dynamic
-provisioning. If you're using multiple storage classes you might want to remove
-the annotation from the `csi-storageclass.yaml` and re-deploy it. This is
-based on the [recommended mechanism](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md#recommended-mechanism-for-deploying-csi-drivers-on-kubernetes) of deploying CSI drivers on Kubernetes.
+NOTE: the `latest` release tracks the latest Blockbridge driver release. Choose a specific version if needed for your environment.
 
-There are a variety of additional example commented-out storage classes in the
-deployment file detailing additional configuration options:
+| Blockbridge Driver | CSI Specification Version | Deploy URL |
+| :---               | :---                      | :---       |
+| latest             | 0.2.0                     | https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-blockbridge.yaml |
+| 0.1.4              | 0.2.0                     | https://get.blockbridge.com/kubernetes/deploy/csi/0.1.4/csi-blockbridge.yaml |
+
+The Blockbridge CSI Driver is deployed using the [recommended mechanism](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md#recommended-mechanism-for-deploying-csi-drivers-on-kubernetes) of deploying CSI drivers on Kubernetes.
+
+### Storage Classes
+
+A default "general purpose" StorageClass called `blockbridge-gp` is created. This is the **default** StorageClass for dynamic provisioning of storage volumes. The general purpose StorageClass provisions using the default Blockbridge storage template configured in the Blockbridge controlplane. 
+
+There are a variety of additional storage class configuration options available. Several example storage classes are shown in the `csi-storageclass.yaml`. Download, edit, and apply additional storage classes as needed.
+
+Additional configuration options include:
 
 1. Using transport encryption (tls)
 2. Using a custom tag-based query
 3. Using a named service template
 4. Using explicitly specified provisioned IOPS
-
-*Note that the deployment proposal to Kubernetes is still a work in progress and not all of the written
-features are implemented. When in doubt, open an issue or ask #sig-storage in [Kubernetes Slack](http://slack.k8s.io)*
 
 #### 3. Test and verify:
 
