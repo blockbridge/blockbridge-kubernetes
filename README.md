@@ -3,7 +3,13 @@
 
 **Summary**
 
-Blockbridge provides a Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec)) driver to deliver persistent, secure, multi-tenant, cluster-accessible storage for Kubernetes. Deploy the Blockbridge CSI driver to your Kubernetes cluster as a DaemonSet/StatefulSet using standard Kubernetes commands.
+Blockbridge provides a Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec)) driver to deliver persistent, secure, multi-tenant, cluster-accessible storage for Kubernetes. Deploy the Blockbridge CSI driver in your Kubernetes cluster as a DaemonSet/StatefulSet using standard Kubernetes commands.
+
+| csi version supported | stability | kubernetes version |
+| :---              | :---      | :--- |
+| v0.2.0 | beta | v1.10+
+
+The CSI specification is currently in **beta** in Kubernetes. As such, the Blockbridge  driver is currently in **beta**. It is expected to reach General Availability (GA) in Kubernetes 1.13.
 
 ## Blockbridge Driver Capabilities
 
