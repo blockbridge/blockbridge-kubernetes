@@ -40,7 +40,7 @@ The driver is configured with two pieces of information:
 | configuration | description |
 | :----         | :----       |
 | BLOCKBRIDGE_API_URL | Blockbridge controlplane API endpoint URL |
-| BLOCKBRIDGD_ACCESS_TOKEN | Blockbridge controlplane access token
+| BLOCKBRIDGE_ACCESS_TOKEN | Blockbridge controlplane access token
 
 The API endpoint is specified as a URL, and points to the Blockbridge
 controlplane. The access token authenticates the driver with the Blockbridge
