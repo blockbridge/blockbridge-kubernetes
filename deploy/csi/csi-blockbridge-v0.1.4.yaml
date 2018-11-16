@@ -69,13 +69,13 @@ provisioner: com.blockbridge.csi.eps
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: bb-csi-attacher
+  name: blockbridge-csi-attacher
   namespace: kube-system
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: bb-external-attacher-runner
+  name: blockbridge-external-attacher-runner
   namespace: kube-system
 rules:
   - apiGroups: [""]
@@ -98,28 +98,28 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: bb-csi-attacher-role
+  name: blockbridge-csi-attacher-role
   namespace: kube-system
 subjects:
   - kind: ServiceAccount
-    name: bb-csi-attacher
+    name: blockbridge-csi-attacher
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: bb-external-attacher-runner
+  name: blockbridge-external-attacher-runner
   apiGroup: rbac.authorization.k8s.io
 ---
 # needed for StatefulSet
 kind: Service
 apiVersion: v1
 metadata:
-  name: csi-attacher-bbplugin
+  name: csi-attacher-blockbridge
   namespace: kube-system
   labels:
-    app: csi-attacher-bbplugin
+    app: csi-attacher-blockbridge
 spec:
   selector:
-    app: csi-attacher-bbplugin
+    app: csi-attacher-blockbridge
   ports:
     - name: dummy
       port: 12345
@@ -127,15 +127,15 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1beta1
 metadata:
-  name: csi-attacher-bbplugin
+  name: csi-attacher-blockbridge
   namespace: kube-system
 spec:
-  serviceName: "csi-attacher-bbplugin"
+  serviceName: "csi-attacher-blockbridge"
   replicas: 1
   template:
     metadata:
       labels:
-        app: csi-attacher-bbplugin
+        app: csi-attacher-blockbridge
     spec:
       affinity:
         nodeAffinity:
@@ -146,9 +146,9 @@ spec:
                 operator: In
                 values:
                 - "true"
-      serviceAccount: bb-csi-attacher
+      serviceAccount: blockbridge-csi-attacher
       containers:
-        - name: bb-csi-attacher
+        - name: blockbridge-csi-attacher
           image: quay.io/k8scsi/csi-attacher:v0.2.0
           args:
             - "--v=5"
@@ -161,7 +161,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: blockbridge-csi-plugin
-          image: registry.blockbridge.com/blockbridge/bb-csi-plugin:v0.1.4
+          image: docker.io/blockbridge/csi-driver:v0.1.4
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(BLOCKBRIDGE_API_KEY)"
@@ -190,13 +190,13 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: bb-csi-provisioner
+  name: blockbridge-csi-provisioner
   namespace: kube-system
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: bb-external-provisioner-runner
+  name: blockbridge-external-provisioner-runner
   namespace: kube-system
 rules:
   - apiGroups: [""]
@@ -214,33 +214,32 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["list", "watch", "create", "update", "patch"]
-    
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: bb-csi-provisioner-role
+  name: blockbridge-csi-provisioner-role
   namespace: kube-system
 subjects:
   - kind: ServiceAccount
-    name: bb-csi-provisioner
+    name: blockbridge-csi-provisioner
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: bb-external-provisioner-runner
+  name: blockbridge-external-provisioner-runner
   apiGroup: rbac.authorization.k8s.io
 ---
 # needed for StatefulSet
 kind: Service
 apiVersion: v1
 metadata:
-  name: csi-provisioner-bbplugin
+  name: csi-provisioner-blockbridge
   namespace: kube-system
   labels:
-    app: csi-provisioner-bbplugin
+    app: csi-provisioner-blockbridge
 spec:
   selector:
-    app: csi-provisioner-bbplugin
+    app: csi-provisioner-blockbridge
   ports:
     - name: dummy
       port: 12345
@@ -248,15 +247,15 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1beta1
 metadata:
-  name: csi-provisioner-bbplugin
+  name: csi-provisioner-blockbridge
   namespace: kube-system
 spec:
-  serviceName: "csi-provisioner-bbplugin"
+  serviceName: "csi-provisioner-blockbridge"
   replicas: 1
   template:
     metadata:
       labels:
-        app: csi-provisioner-bbplugin
+        app: csi-provisioner-blockbridge
     spec:
       affinity:
         nodeAffinity:
@@ -267,9 +266,9 @@ spec:
                 operator: In
                 values:
                 - "true"
-      serviceAccount: bb-csi-provisioner
+      serviceAccount: blockbridge-csi-provisioner
       containers:
-        - name: bb-csi-provisioner
+        - name: blockbridge-csi-provisioner
           image: quay.io/k8scsi/csi-provisioner:v0.2.0
           args:
             - "--provisioner=com.blockbridge.csi.eps"
@@ -283,7 +282,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: blockbridge-csi-plugin
-          image: registry.blockbridge.com/blockbridge/bb-csi-plugin:v0.1.4
+          image: docker.io/blockbridge/csi-driver:v0.1.4
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(BLOCKBRIDGE_API_KEY)"
@@ -312,13 +311,13 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-bbplugin
+  name: csi-blockbridge
   namespace: kube-system
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-bbplugin
+  name: csi-blockbridge
   namespace: kube-system
 rules:
   - apiGroups: [""]
@@ -340,33 +339,32 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-bbplugin
+  name: csi-blockbridge
   namespace: kube-system
 subjects:
   - kind: ServiceAccount
-    name: csi-bbplugin
+    name: csi-blockbridge
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: csi-bbplugin
-  apiGroup: rbac.authorization.k8s.io          
-
+  name: csi-blockbridge
+  apiGroup: rbac.authorization.k8s.io
 ---
 kind: DaemonSet
 apiVersion: apps/v1beta2
 metadata:
-  name: csi-bbplugin
+  name: csi-blockbridge
   namespace: kube-system
 spec:
   selector:
     matchLabels:
-      app: csi-bbplugin
+      app: csi-blockbridge
   template:
     metadata:
       labels:
-        app: csi-bbplugin
+        app: csi-blockbridge
     spec:
-      serviceAccount: csi-bbplugin
+      serviceAccount: csi-blockbridge
       hostNetwork: true
       containers:
         - name: driver-registrar
@@ -387,13 +385,13 @@ spec:
               # TODO(arslan): the registrar is not implemented yet
               # - name: registrar-socket-dir
               #   mountPath: /var/lib/csi/sockets/
-        - name: csi-bbplugin
+        - name: csi-blockbridge
           securityContext:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN", "NET_ADMIN", "IPC_LOCK", "IPC_OWNER"]
             allowPrivilegeEscalation: true
-          image: registry.blockbridge.com/blockbridge/bb-csi-plugin:v0.1.4
+          image: docker.io/blockbridge/csi-driver:v0.1.4
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(BLOCKBRIDGE_API_KEY)"

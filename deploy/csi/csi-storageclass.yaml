@@ -1,0 +1,107 @@
+# Copyright 2018 Blockbridge Networks
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+# example usage: kubectl apply -f <this_file>
+
+###########################################################
+# StorageClass General Purpose (default)
+#
+# set default storage class with no additional parameters
+###########################################################
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: blockbridge-gp
+  namespace: kube-system
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: com.blockbridge.csi.eps
+###########################################################
+
+###########################################################
+# StorageClass with TLS
+#
+# Use TLS network encryption to attach volumes. Access to
+# volumes is encrypted over the network between node and
+# Blockbridge backend.
+###########################################################
+# ---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: blockbridge-tls
+#   namespace: kube-system
+# provisioner: com.blockbridge.csi.eps
+# parameters:
+#   transportEncryption: tls
+###########################################################
+
+###########################################################
+# StorageClass with TLS and XFS filesystem
+#
+# Use TLS network encryption, and format the volume with
+# the XFS filesystem.
+###########################################################
+# ---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: blockbridge-xfs
+#   namespace: kube-system
+# provisioner: com.blockbridge.csi.eps
+# parameters:
+#   fsType: xfs
+#   transportEncryption: tls
+###########################################################
+
+###########################################################
+# StorageClass requiring SSD
+#
+# Specify a storage query to Blockbridge requiring storage
+# tagged as 'ssd'. Ensures all volumes come from SSD pool
+# configured in Blockbridge.
+###########################################################
+# ---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: blockbridge-ssd
+#   namespace: kube-system
+# provisioner: com.blockbridge.csi.eps
+# parameters:
+#   storageQuery: '+ssd'
+###########################################################
+
+###########################################################
+# StorageClass Provisioned IOPS
+#
+# Require volumes using provisioned IOPS. Provisioned IOPS
+# guarantees Quality of Service (QoS). The IOPS value
+# specified is the guaranteed mimimum IOPS for the volume.
+#
+# NOTE: requires Blockbridge configured datastores
+# with provisioned IOPS enabled.
+###########################################################
+# ---
+# kind: StorageClass
+# apiVersion: storage.k8s.io/v1
+# metadata:
+#   name: blockbridge-piops
+#   namespace: kube-system
+# provisioner: com.blockbridge.csi.eps
+# parameters:
+#   serviceType: piops
+#   iops: '1000'
+###########################################################
