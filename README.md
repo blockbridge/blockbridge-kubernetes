@@ -142,9 +142,6 @@ A default "general purpose" StorageClass called `blockbridge-gp` is created. Thi
 
 There are a variety of additional storage class configuration options available, including:
 
-
-Additional configuration options include:
-
 1. Using transport encryption (tls)
 2. Using a custom tag-based query
 3. Using a named service template
@@ -154,12 +151,26 @@ Several example storage classes are shown in `csi-storageclass.yaml`. Download, 
 
 ```
 $ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/csi-storageclass.yaml
+$ cat csi-storageclass.yaml
+###########################################################
+# StorageClass General Purpose (default)
+#
+# set default storage class with no additional parameters
+###########################################################
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: blockbridge-gp
+  namespace: kube-system
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: com.blockbridge.csi.eps
+###########################################################
 ```
 
-Edit `csi-storageclass.yaml` as desired, and apply the new storage classes:
-
 ```
-$ kubectl apply -f csi-storageclass.yaml
+$ kubectl apply -f ./csi-storageclass.yaml
 ```
 
 ### Test and verify: PersistentVolumeClaim
@@ -189,6 +200,8 @@ spec:
     requests:
       storage: 5Gi
   storageClassName: blockbridge-gp
+```
+```
 $ kubectl apply -f ./csi-pvc.yaml
 ```
 
@@ -228,7 +241,10 @@ spec:
     - name: my-blockbridge-volume
       persistentVolumeClaim:
         claimName: csi-pvc-blockbridge-example
+```
 
+```
+$ kubectl apply -f ./csi-app.yaml
 ```
 
 Check if the pod is running successfully:
