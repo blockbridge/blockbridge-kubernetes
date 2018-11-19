@@ -334,6 +334,8 @@ persistentvolumeclaim "csi-pvc-blockbridge" created
 Ensure the PVC was created successfully:
 ```
 $ kubectl get pvc csi-pvc-blockbridge
+csi-pvc-blockbridge     Bound     pvc-6cb93ab2-ec49-11e8-8b89-46facf8570bb   5Gi        RWO            blockbridge-gp     4s
+```
 
 ### Test and verify: Application
 
@@ -402,6 +404,7 @@ Filesystem           1K-blocks      Used Available Use% Mounted on
 $ kubectl exec -ti blockbridge-demo -c my-backend /bin/sh
 / # ls /data
 hello-world
+
 ```
 
 ## Troubleshooting
