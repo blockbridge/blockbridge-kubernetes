@@ -163,9 +163,9 @@ metadata:
   name: blockbridge
   namespace: kube-system
 stringData:
-  api-url: '{{ BLOCKBRIDGE_API_URL }}'
-  access-token: '{{ BLOCKBRIDGE_API_KEY }}'
-  ssl-verify-peer: false
+  api-url: "{{ BLOCKBRIDGE_API_URL }}"
+  access-token: "{{ BLOCKBRIDGE_API_KEY }}"
+  ssl-verify-peer: "false"
 EOF
 ```
 
@@ -181,7 +181,7 @@ metadata:
 stringData:
   api-url: "https://blockbridge.mycompany.example/api"
   access-token: "1/Nr7qLedL/P0KXxbrB8+jpfrFPBrNi3X+8H9BBwyOYg/mvOot50v2vA"
-  ssl-verify-peer: false
+  ssl-verify-peer: "false"
 ```
 
 Create the secret in Kubernetes:
@@ -194,18 +194,39 @@ secret "blockbridge" created
 Ensure the secret exists in the `kube-system` namespace:
 
 ```
-$ kubectl -n kube-system get secrets
-blockbridge                                      Opaque                                2         1h
+$ kubectl -n kube-system get secrets blockbridge
+NAME          TYPE      DATA      AGE
+blockbridge   Opaque    3         2m
 ```
 
 ### Deploy the Blockbridge Driver
 
 Deploy the Blockbridge Driver as a DaemonSet / StatefulSet using `kubectl`.
 
-The latest version of the driver is applied:
+Apply the latest version of the driver:
 
 ```
 $ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-blockbridge.yaml
+```
+
+Confirm everything was created:
+
+```
+storageclass.storage.k8s.io "blockbridge-gp" created
+serviceaccount "blockbridge-csi-attacher" created
+clusterrole.rbac.authorization.k8s.io "blockbridge-external-attacher-runner" created
+clusterrolebinding.rbac.authorization.k8s.io "blockbridge-csi-attacher-role" created
+service "csi-attacher-blockbridge" created
+statefulset.apps "csi-attacher-blockbridge" created
+serviceaccount "blockbridge-csi-provisioner" created
+clusterrole.rbac.authorization.k8s.io "blockbridge-external-provisioner-runner" created
+clusterrolebinding.rbac.authorization.k8s.io "blockbridge-csi-provisioner-role" created
+service "csi-provisioner-blockbridge" created
+statefulset.apps "csi-provisioner-blockbridge" created
+serviceaccount "csi-blockbridge" created
+clusterrole.rbac.authorization.k8s.io "csi-blockbridge" created
+clusterrolebinding.rbac.authorization.k8s.io "csi-blockbridge" created
+daemonset.apps "csi-blockbridge" created
 ```
 
 NOTE: the `latest` release tracks the latest Blockbridge driver release. Choose a specific version if needed for your environment.
@@ -216,6 +237,12 @@ NOTE: the `latest` release tracks the latest Blockbridge driver release. Choose 
 | 0.1.4              | 0.2.0                     | https://get.blockbridge.com/kubernetes/deploy/csi/v0.1.4/csi-blockbridge.yaml |
 
 The Blockbridge CSI Driver is deployed using the [recommended mechanism](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md#recommended-mechanism-for-deploying-csi-drivers-on-kubernetes) of deploying CSI drivers on Kubernetes.
+
+### Ensure Driver is Operational
+
+```
+$ kubectl -n kube-system get pods
+```
 
 ### Storage Classes
 
@@ -231,7 +258,7 @@ There are a variety of additional storage class configuration options available,
 Several example storage classes are shown in `csi-storageclass.yaml`. Download, edit, and apply additional storage classes as needed.
 
 ```
-$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/csi-storageclass.yaml
+$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-storageclass.yaml
 $ cat csi-storageclass.yaml
 ###########################################################
 # StorageClass General Purpose (default)
@@ -252,6 +279,9 @@ provisioner: com.blockbridge.csi.eps
 
 ```
 $ kubectl apply -f ./csi-storageclass.yaml
+```
+```
+storageclass.storage.k8s.io "blockbridge-gp" configured
 ```
 
 ### Test and verify: PersistentVolumeClaim
