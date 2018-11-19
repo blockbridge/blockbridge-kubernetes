@@ -55,7 +55,82 @@ The API endpoint is specified as a URL, and points to the Blockbridge
 controlplane. The access token authenticates the driver with the Blockbridge
 controlplane.
 
-For help determining your API endpoint or generating an access token, please contact [Blockbridge Support](mailto:support@blockbridge.com).
+### Create a Blockbridge account to provision volumes for Kubernetes
+
+NOTE: This guide assumes that the Blockbridge controlplane is running and a system password has been set. For help setting up the Blockbridge controlplane, please contact [Blockbridge Support](mailto:support@blockbridge.com).
+
+Create an account to hold the volumes for Kubernetes.
+
+Use the Blockbridge CLI to create the account.
+
+```
+$ docker run -it -e BLOCKBRIDGE_API_HOST=blockbridge.mycompany.example docker.io/blockbridge/cli:latest-alpine bb account create --name kubernetes --password
+```
+
+When prompted, enter the password for the new kubernetes account:
+```
+Enter password: 
+```
+
+And authenticate to the Blockbridge controlplane as the system user:
+```
+Authenticating to https://blockbridge.mycompany.example/api
+
+Enter user or access token: system
+Password for system: 
+Authenticated; token expires in 3599 seconds.
+```
+
+The account is createe:
+```
+== Created account: kubernetes (ACT0762194C40656F03)
+
+== Account: kubernetes (ACT0762194C40656F03)
+name                  kubernetes
+label                 kubernetes        
+serial                ACT0762194C40656F03      
+created               2018-11-19 16:15:15 +0000
+disabled              no                       
+```
+
+### Create an authoriation (access token) for the Blockbridge volume driver
+
+Create an access token in the new kubernetes account for use as authentication for the volume driver.
+
+Authenticate using the new kubernetes user and password.
+
+```
+$ docker run -it -e BLOCKBRIDGE_API_HOST=blockbridge.mycompany.example docker.io/blockbridge/cli:latest-alpine bb authorization create
+Authenticating to https://blockbridge.mycompany.example/api
+
+Enter user or access token: kubernetes
+Password for kubernetes: 
+Authenticated; token expires in 3599 seconds.
+```
+
+The authorization (access token) is created.
+```
+== Created authorization: ATH4762194C4062668E
+
+== Authorization: ATH4762194C4062668E
+serial                ATH4762194C4062668E                    
+account               kubernetes-srust2 (ACT0762194C40656F03)
+user                  kubernetes-srust2 (USR1B62194C40656FBD)
+enabled               yes                                    
+created at            2018-11-19 11:15:47 -0500              
+access type           online                                 
+token suffix          ot50v2vA                               
+restrict              auth                                   
+enforce 2-factor      false                                  
+
+== Access Token
+access token          1/Nr7qLedL/P0KXxbrB8+jpfrFPBrNi3X+8H9BBwyOYg/mvOot50v2vA
+
+*** Remember to record your access token!
+```
+
+Make a note of the access token. Use this as the BLOCKBRIDGE_API_KEY during the Blockbridge volume driver installation.
+
 
 ## Driver installation in Kubernetes
 
@@ -101,7 +176,7 @@ metadata:
   namespace: kube-system
 stringData:
   api-url: "https://blockbridge.mycompany.example/api"
-  access-token: "1/AKFm669............brr1XWWg"
+  access-token: "1/Nr7qLedL/P0KXxbrB8+jpfrFPBrNi3X+8H9BBwyOYg/mvOot50v2vA"
 ```
 
 Create the secret in Kubernetes:
