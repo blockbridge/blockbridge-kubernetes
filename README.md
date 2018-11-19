@@ -387,7 +387,6 @@ Write inside the app container:
 
 ```
 $ kubectl exec -ti blockbridge-demo -c my-frontend /bin/sh
-
 / # df /data
 Filesystem           1K-blocks      Used Available Use% Mounted on
 /dev/blockbridge/2f93beb2-61eb-456b-809e-22e27e4f73cf
