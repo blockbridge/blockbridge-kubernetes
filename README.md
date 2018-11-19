@@ -151,6 +151,8 @@ Client Version: version.Info{Major:"1", Minor:"10", GitVersion:"v1.10.3", GitCom
 Server Version: version.Info{Major:"1", Minor:"10", GitVersion:"v1.10.3", GitCommit:"2bba0127d85d5a46ab4b778548be28623b32d0b0", GitTreeState:"clean", BuildDate:"2018-05-21T09:05:37Z", GoVersion:"go1.9.3", Compiler:"gc", Platform:"linux/amd64"}
 ```
 
+NOTE: setting up `kubectl` authentication is beyond the scope of this guide. Please refer to your specific instructions for the Kubernetes service or installation you are using.
+
 ### Create a secret
 
 Create a secret containing the Blockbridge API endpoint URL and access token.
