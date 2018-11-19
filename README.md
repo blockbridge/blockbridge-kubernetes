@@ -151,6 +151,8 @@ Create a secret containing the Blockbridge API endpoint URL and access token.
 
 Replace BLOCKBRIDGE_API_URL and BLOCKBRIDGE_API_KEY with the correct values for the Blockbridge controlplane, using the access token created in the **kubernetes** account.
 
+*NOTE: While control traffic is always encrypted, we specify here to disable peer certificate verification using the `ssl-verify-peer` flag. This setting implicitly trusts the default controlplane self-signed certificate. Configuring certificate verification, including specifying custom-supplied CA certificates, is beyond the scope of this guide. Please contact [Blockbridge Support](mailto:support@blockbridge.com) for more information.*
+
 ```
 $ cat > secret.yml <<- EOF
 apiVersion: v1
@@ -161,6 +163,7 @@ metadata:
 stringData:
   api-url: '{{ BLOCKBRIDGE_API_URL }}'
   access-token: '{{ BLOCKBRIDGE_API_KEY }}'
+  ssl-verify-peer: false
 EOF
 ```
 
@@ -176,6 +179,7 @@ metadata:
 stringData:
   api-url: "https://blockbridge.mycompany.example/api"
   access-token: "1/Nr7qLedL/P0KXxbrB8+jpfrFPBrNi3X+8H9BBwyOYg/mvOot50v2vA"
+  ssl-verify-peer: false
 ```
 
 Create the secret in Kubernetes:
