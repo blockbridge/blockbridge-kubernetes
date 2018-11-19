@@ -67,12 +67,12 @@ Use the Blockbridge CLI to create the account.
 $ docker run -it -e BLOCKBRIDGE_API_HOST=blockbridge.mycompany.example docker.io/blockbridge/cli:latest-alpine bb account create --name kubernetes --password
 ```
 
-When prompted, enter the password for the new kubernetes account:
+When prompted, first enter the password for the new kubernetes account:
 ```
 Enter password: 
 ```
 
-And authenticate to the Blockbridge controlplane as the system user:
+When prompoted, authenticate to the Blockbridge controlplane as the system user:
 ```
 Authenticating to https://blockbridge.mycompany.example/api
 
@@ -81,7 +81,7 @@ Password for system:
 Authenticated; token expires in 3599 seconds.
 ```
 
-The account is createe:
+The account is created:
 ```
 == Created account: kubernetes (ACT0762194C40656F03)
 
@@ -93,7 +93,7 @@ created               2018-11-19 16:15:15 +0000
 disabled              no                       
 ```
 
-### Create an authoriation (access token) for the Blockbridge volume driver
+### Create an authorization (access token) for the Blockbridge volume driver
 
 Create an access token in the new kubernetes account for use as authentication for the volume driver.
 
@@ -131,7 +131,6 @@ access token          1/Nr7qLedL/P0KXxbrB8+jpfrFPBrNi3X+8H9BBwyOYg/mvOot50v2vA
 
 Make a note of the access token. Use this as the BLOCKBRIDGE_API_KEY during the Blockbridge volume driver installation.
 
-
 ## Driver installation in Kubernetes
 
 ### Authenticate to Kubernetes
@@ -150,7 +149,7 @@ Server Version: version.Info{Major:"1", Minor:"10", GitVersion:"v1.10.3", GitCom
 
 Create a secret containing the Blockbridge API endpoint URL and access token.
 
-Replace BLOCKBRIDGE_API_URL and BLOCKBRIDGE_API_KEY with the correct values for the Blockbridge controlplane.
+Replace BLOCKBRIDGE_API_URL and BLOCKBRIDGE_API_KEY with the correct values for the Blockbridge controlplane, using the access token created in the **kubernetes** account.
 
 ```
 $ cat > secret.yml <<- EOF
