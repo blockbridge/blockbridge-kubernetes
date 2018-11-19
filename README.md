@@ -64,7 +64,8 @@ Create an account to hold the volumes for Kubernetes.
 Use the Blockbridge CLI to create the account.
 
 ```
-$ docker run --rm -it -e BLOCKBRIDGE_API_HOST=blockbridge.mycompany.example docker.io/blockbridge/cli:latest-alpine bb account create --name kubernetes --password
+$ export BLOCKBRIDGE_API_HOST=blockbridge.mycompany.example
+$ docker run --rm -it -e BLOCKBRIDGE_API_HOST docker.io/blockbridge/cli:latest-alpine bb --no-ssl-verify-peer account create --name kubernetes --password
 ```
 
 When prompted, first enter the password for the new **kubernetes** account:
@@ -100,7 +101,8 @@ Create an access token in the new **kubernetes** account for use as authenticati
 Authenticate using the new **kubernetes** account username and password.
 
 ```
-$ docker run --rm -it -e BLOCKBRIDGE_API_HOST=blockbridge.mycompany.example docker.io/blockbridge/cli:latest-alpine bb authorization create
+$ export BLOCKBRIDGE_API_HOST=blockbridge.mycompany.example
+$ docker run --rm -it -e BLOCKBRIDGE_API_HOST docker.io/blockbridge/cli:latest-alpine bb --no-ssl-verify-peer authorization create
 Authenticating to https://blockbridge.mycompany.example/api
 
 Enter user or access token: kubernetes
