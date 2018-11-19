@@ -331,6 +331,10 @@ $ kubectl apply -f ./csi-pvc.yaml
 persistentvolumeclaim "csi-pvc-blockbridge" created
 ```
 
+Ensure the PVC was created successfully:
+```
+$ kubectl get pvc csi-pvc-blockbridge
+
 ### Test and verify: Application
 
 Create a Pod (application) that utilizes the example volume. When the Pod is created, the volume will be attached, formatted and mounted, making it available to the specified application.
@@ -398,4 +402,70 @@ Filesystem           1K-blocks      Used Available Use% Mounted on
 $ kubectl exec -ti blockbridge-demo -c my-backend /bin/sh
 / # ls /data
 hello-world
+```
+
+## Troubleshooting
+
+### PVC unauthorized
+
+#### Symptom
+Check the PVC describe output:
+```
+$ kubectl describe pvc csi-pvc-blockbridge
+```
+
+Provisioning failed due to "unauthorized" because the authorization access token is not valid. Ensure the correct access token is entered in the secret.
+
+```
+  Warning  ProvisioningFailed    6s (x2 over 19s)  com.blockbridge.csi.eps csi-provisioner-blockbridge-0 2caddb79-ec46-11e8-845d-465903922841  Failed to provision volume with StorageClass "blockbridge-gp": rpc error: code = Internal desc = unauthorized_error: unauthorized: unauthorized
+```
+ 
+#### Resolution
+
+* Edit `secret.yml` and ensure correct access token and API URL are set.
+* delete secret: `kubectl delete -f secret.yml`
+* create secret: `kubectl create -f secret.yml`
+* remove old configuration:
+   * `kubectl delete -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml`
+   * `kubectl delete -f https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-blockbridge.yaml`
+* re-apply configuration:
+   * `kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-blockbridge.yaml`
+   * `kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml`
+   
+### PVC StorageClass not found
+#### Symptom
+Check the PVC describe output:
+```
+$ kubectl describe pvc csi-pvc-blockbridge
+```
+
+Provisioning failed because the storage class specified was invalid.
+```
+  Warning  ProvisioningFailed  7s (x3 over 10s)  persistentvolume-controller  storageclass.storage.k8s.io "blockbridge-gp" not found
+```
+
+#### Resolution
+Ensure the StorageClass exists with the same name.
+```
+$ kubectl get storageclass blockbridge-gp
+Error from server (NotFound): storageclasses.storage.k8s.io "blockbridge-gp" not found
+```
+
+* Create the storageclass: 
+```
+$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-storageclass.yaml
+```
+
+* Alternatively, download and edit the desired storageclass:
+```
+$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-storageclass.yaml
+$ edit csi-storageclass.yaml
+$ kubectl -f apply ./csi-storageclass.yaml
+```
+
+The PVC continues to retry and picks up the storage class change:
+```
+$ kubectl get pvc
+NAME                    STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
+csi-pvc-blockbridge     Bound     pvc-6cb93ab2-ec49-11e8-8b89-46facf8570bb   5Gi        RWO            blockbridge-gp     4s
 ```
