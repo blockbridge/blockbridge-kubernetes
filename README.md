@@ -48,7 +48,7 @@ The driver is configured with two pieces of information:
 
 | configuration | description |
 | :----         | :----       |
-| BLOCKBRIDGE_API_URL | Blockbridge controlplane API endpoint URL specified as *https://hostname/api* |
+| BLOCKBRIDGE_API_URL | Blockbridge controlplane API endpoint URL specified as `https://hostname.example/api` |
 | BLOCKBRIDGE_API_KEY | Blockbridge controlplane access token
 
 The API endpoint is specified as a URL, and points to the Blockbridge
