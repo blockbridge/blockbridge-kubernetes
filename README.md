@@ -211,7 +211,7 @@ NOTE: the `latest` release tracks the latest Blockbridge driver release. Choose 
 | Blockbridge Driver | CSI Specification Version | Deploy URL |
 | :---               | :---                      | :---       |
 | latest             | 0.2.0                     | https://get.blockbridge.com/kubernetes/deploy/csi/latest/csi-blockbridge.yaml |
-| 0.1.4              | 0.2.0                     | https://get.blockbridge.com/kubernetes/deploy/csi/0.1.4/csi-blockbridge.yaml |
+| 0.1.4              | 0.2.0                     | https://get.blockbridge.com/kubernetes/deploy/csi/v0.1.4/csi-blockbridge.yaml |
 
 The Blockbridge CSI Driver is deployed using the [recommended mechanism](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md#recommended-mechanism-for-deploying-csi-drivers-on-kubernetes) of deploying CSI drivers on Kubernetes.
 
@@ -298,6 +298,7 @@ Alternatively, download the application yaml, modify as needed, and apply:
 $ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/examples/csi-app.yaml
 $ cat csi-app.yaml
 ---
+---
 kind: Pod
 apiVersion: v1
 metadata:
@@ -308,18 +309,12 @@ spec:
       image: busybox
       volumeMounts:
       - mountPath: "/data"
-        name: my-blockbridge-volume
-      command: [ "sleep", "1000000" ]
-    - name: my-middleend
-      image: busybox
-      volumeMounts:
-      - mountPath: "/data"
-        name: my-blockbridge-volume
+        name: my-bb-volume
       command: [ "sleep", "1000000" ]
   volumes:
-    - name: my-blockbridge-volume
+    - name: my-bb-volume
       persistentVolumeClaim:
-        claimName: csi-pvc-blockbridge-example
+        claimName: csi-pvc-blockbridge
 ```
 
 ```
@@ -340,7 +335,7 @@ Write inside the app container:
 $ kubectl exec -ti blockbridge-demo -c my-frontend /bin/sh
 / # touch /data/hello-world
 / # exit
-$ kubectl exec -ti blockbridge-demo -c my-middleend /bin/sh
+$ kubectl exec -ti blockbridge-demo -c my-backend /bin/sh
 / # ls /data
 hello-world
 ```
