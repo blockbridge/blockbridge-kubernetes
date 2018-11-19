@@ -298,7 +298,6 @@ Alternatively, download the application yaml, modify as needed, and apply:
 $ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/examples/csi-app.yaml
 $ cat csi-app.yaml
 ---
----
 kind: Pod
 apiVersion: v1
 metadata:
@@ -306,6 +305,12 @@ metadata:
 spec:
   containers:
     - name: my-frontend
+      image: busybox
+      volumeMounts:
+      - mountPath: "/data"
+        name: my-bb-volume
+      command: [ "sleep", "1000000" ]
+    - name: my-backend
       image: busybox
       volumeMounts:
       - mountPath: "/data"
