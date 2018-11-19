@@ -57,7 +57,7 @@ controlplane.
 
 ### Create a Blockbridge account to provision volumes for Kubernetes
 
-NOTE: This guide assumes that the Blockbridge controlplane is running and a system password has been set. For help setting up the Blockbridge controlplane, please contact [Blockbridge Support](mailto:support@blockbridge.com).
+*NOTE: This guide assumes that the Blockbridge controlplane is running and a system password has been set. For help setting up the Blockbridge controlplane, please contact [Blockbridge Support](mailto:support@blockbridge.com).*
 
 Create an account to hold the volumes for Kubernetes.
 
