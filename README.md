@@ -386,7 +386,9 @@ pod "blockbridge-demo" created
 Check if the pod is running successfully:
 
 ```
-$ kubectl describe pods/blockbridge-demo
+$ kubectl get pod blockbridge-demo
+NAME               READY     STATUS    RESTARTS   AGE
+blockbridge-demo   2/2       Running   0          13s
 ```
 
 ### Test and Verify: Write Data
@@ -473,6 +475,46 @@ The PVC continues to retry and picks up the storage class change:
 $ kubectl get pvc
 NAME                    STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS      AGE
 csi-pvc-blockbridge     Bound     pvc-6cb93ab2-ec49-11e8-8b89-46facf8570bb   5Gi        RWO            blockbridge-gp     4s
+```
+
+### APP stuck Pending cannot find Persistent Volume Claim (PVC)
+#### Symptom
+The app is stuck in pending:
+```
+$ kubectl get pod blockbridge-demo
+NAME               READY     STATUS    RESTARTS   AGE
+blockbridge-demo   0/2       Pending   0          14s
+```
+
+The PVC cannot be found:
+```
+$ kubectl describe pod blockbridge-demo
+
+Events:
+  Type     Reason            Age                From               Message
+  ----     ------            ----               ----               -------
+  Warning  FailedScheduling  12s (x6 over 28s)  default-scheduler  persistentvolumeclaim "csi-pvc-blockbridge" not found
+```
+
+#### Resolution
+Ensure the PVC is created and valid.
+```
+$ kubectl get pvc csi-pvc-blockbridge
+Error from server (NotFound): persistentvolumeclaims "csi-pvc-blockbridge" not found
+```
+
+Create the PVC:
+```
+$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml
+persistentvolumeclaim "csi-pvc-blockbridge" created
+```
+
+App retries automatically and succeeds in starting:
+```
+$ kubectl describe pod blockbridge-demo
+  Normal   Scheduled               8s                 default-scheduler                  Successfully assigned blockbridge-demo to aks-nodepool1-56242131-0
+  Normal   SuccessfulAttachVolume  8s                 attachdetach-controller            AttachVolume.Attach succeeded for volume "pvc-5332e169-ec4f-11e8-8b89-46facf8570bb"
+  Normal   SuccessfulMountVolume   8s                 kubelet, aks-nodepool1-56242131-0  MountVolume.SetUp succeeded for volume "default-token-bx8b9"
 ```
 
 ## Where to go from here
