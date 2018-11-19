@@ -248,6 +248,15 @@ The Blockbridge CSI Driver is deployed using the [recommended mechanism](https:/
 $ kubectl -n kube-system get pods
 ```
 
+Blockbridge CSI pods are all Running:
+```
+$ kubectl get pods -n kube-system
+NAME                                    READY     STATUS    RESTARTS   AGE
+csi-attacher-blockbridge-0              2/2       Running   0          6s
+csi-blockbridge-hcrr9                   2/2       Running   0          5s
+csi-provisioner-blockbridge-0           2/2       Running   0          6s
+```
+
 ### Storage Classes
 
 A default "general purpose" StorageClass called `blockbridge-gp` is created. This is the **default** StorageClass for dynamic provisioning of storage volumes. The general purpose StorageClass provisions using the default Blockbridge storage template configured in the Blockbridge controlplane. 
@@ -297,6 +306,7 @@ Create a PersistentVolumeClaim. This dynamically provisions a volume in Blockbri
 Create the PVC:
 ```
 $ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml
+persistentvolumeclaim "csi-pvc-blockbridge" created
 ```
 
 Alternatively, download the example volume yaml, modify as needed, and apply:
@@ -318,6 +328,7 @@ spec:
 ```
 ```
 $ kubectl apply -f ./csi-pvc.yaml
+persistentvolumeclaim "csi-pvc-blockbridge" created
 ```
 
 ### Test and verify: Application
@@ -327,6 +338,7 @@ Create a Pod (application) that utilizes the example volume. When the Pod is cre
 Create the application:
 ```
 $ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-app.yaml
+pod "blockbridge-demo" created
 ```
 
 Alternatively, download the application yaml, modify as needed, and apply:
@@ -360,6 +372,7 @@ spec:
 
 ```
 $ kubectl apply -f ./csi-app.yaml
+pod "blockbridge-demo" created
 ```
 
 Check if the pod is running successfully:
