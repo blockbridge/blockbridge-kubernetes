@@ -97,12 +97,13 @@ disabled              no
 ### Create an authorization (access token) for the Blockbridge volume driver
 
 Create an access token in the new **kubernetes** account for use as authentication for the volume driver.
-
-Authenticate using the new **kubernetes** account username and password.
-
 ```
 $ export BLOCKBRIDGE_API_HOST=blockbridge.mycompany.example
 $ docker run --rm -it -e BLOCKBRIDGE_API_HOST docker.io/blockbridge/cli:latest-alpine bb --no-ssl-verify-peer authorization create
+```
+
+Authenticate using the new **kubernetes** account username and password.
+```
 Authenticating to https://blockbridge.mycompany.example/api
 
 Enter user or access token: kubernetes
@@ -308,12 +309,16 @@ Create a PersistentVolumeClaim. This dynamically provisions a volume in Blockbri
 Create the PVC:
 ```
 $ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml
+```
+```
 persistentvolumeclaim "csi-pvc-blockbridge" created
 ```
 
 Alternatively, download the example volume yaml, modify as needed, and apply:
 ```
 $ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml
+```
+```
 $ cat csi-pvc.yaml
 ---
 apiVersion: v1
@@ -330,12 +335,16 @@ spec:
 ```
 ```
 $ kubectl apply -f ./csi-pvc.yaml
+```
+```
 persistentvolumeclaim "csi-pvc-blockbridge" created
 ```
 
 Ensure the PVC was created successfully:
 ```
 $ kubectl get pvc csi-pvc-blockbridge
+```
+```
 csi-pvc-blockbridge     Bound     pvc-6cb93ab2-ec49-11e8-8b89-46facf8570bb   5Gi        RWO            blockbridge-gp     4s
 ```
 
@@ -346,12 +355,16 @@ Create a Pod (application) that utilizes the example volume. When the Pod is cre
 Create the application:
 ```
 $ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-app.yaml
+```
+```
 pod "blockbridge-demo" created
 ```
 
 Alternatively, download the application yaml, modify as needed, and apply:
 ```
 $ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/examples/csi-app.yaml
+```
+```
 $ cat csi-app.yaml
 ---
 kind: Pod
@@ -380,6 +393,8 @@ spec:
 
 ```
 $ kubectl apply -f ./csi-app.yaml
+```
+```
 pod "blockbridge-demo" created
 ```
 
@@ -387,6 +402,8 @@ Check if the pod is running successfully:
 
 ```
 $ kubectl get pod blockbridge-demo
+```
+```
 NAME               READY     STATUS    RESTARTS   AGE
 blockbridge-demo   2/2       Running   0          13s
 ```
@@ -397,6 +414,8 @@ Write inside the app container:
 
 ```
 $ kubectl exec -ti blockbridge-demo -c my-frontend /bin/sh
+```
+```
 / # df /data
 Filesystem           1K-blocks      Used Available Use% Mounted on
 /dev/blockbridge/2f93beb2-61eb-456b-809e-22e27e4f73cf
@@ -404,11 +423,13 @@ Filesystem           1K-blocks      Used Available Use% Mounted on
 
 / # touch /data/hello-world
 / # exit
-
+```
+```
 $ kubectl exec -ti blockbridge-demo -c my-backend /bin/sh
+```
+```
 / # ls /data
 hello-world
-
 ```
 
 ## Troubleshooting
