@@ -3,21 +3,13 @@
 
 **Summary**
 
-Blockbridge provides a Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec)) driver to deliver persistent, secure, multi-tenant, cluster-accessible storage for [Kubernetes](https://kubernetes-csi.github.io/docs/). Deploy the Blockbridge CSI driver in your Kubernetes cluster using standard kubectl commands.
+Blockbridge provides a Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec)) driver to deliver persistent, secure, multi-tenant, cluster-accessible storage for Kubernetes. Deploy the Blockbridge CSI driver in your Kubernetes cluster as a DaemonSet/StatefulSet using standard Kubernetes commands.
 
-| Blockbridge Driver | CSI Version | stability | kubernetes version | Deploy URL |
-| :---               | :---        | :---      | :---               | :---       |
-| 0.2.0              | 0.2.0       | beta      | v1.10, v1.11       | https://get.blockbridge.com/kubernetes/deploy/csi/v0.2.0/csi-blockbridge.yaml |
-| 1.0.0              | 1.0.0       | GA        | v1.14+             | https://get.blockbridge.com/kubernetes/deploy/csi/v1.0.0/csi-blockbridge.yaml |
+| csi version supported | stability | kubernetes version |
+| :---              | :---      | :--- |
+| [v0.2.0](https://github.com/container-storage-interface/spec/blob/v0.2.0/spec.md) | beta | v1.10+
 
-As of Kubernetes version 1.14, Blockbridge supports CSI specification version 1.0.0, with Blockbridge driver version 1.0.0, as Generally Available (GA).
-
-NOTE: If using an older version of the Blockbridge driver, please see the appropriate matching README file for version specific instructions.
-
-| Blockbridge Driver | README version|
-| :---               | :---   |
-| 0.2.0              | [README.v0.2.0.md](README.v0.2.0.md) |
-| 1.0.0              | [README.md (this version)](README.md) |
+The CSI specification is currently in **beta** in Kubernetes. As such, the Blockbridge  driver is currently in **beta**. It is expected to reach General Availability (GA) in Kubernetes 1.13.
 
 ## Blockbridge Driver Capabilities
 
@@ -31,21 +23,24 @@ NOTE: If using an older version of the Blockbridge driver, please see the approp
 
 ## Supported Kubernetes environments
 
-* Docker Enterprise Edition 3 (Docker EE 3.0)
-* Rancher 2.X (Rancher kubernetes engine)
+* AKS (azure kubernetes service)
+* EKS (amazon elastic container service for kubernetes)
+* GKE (google kubernetes engine)
+* Rancher 2.X (rancher kubernetes engine)
+* Vanilla / Custom Kubernetes
 
 ## Requirements
 
 The following minimum requirements must be met to use the Blockbridge driver in Kubernetes:
 
-* Kubernetes version 1.14 minimum
+* Kubernetes version 1.10 minimum
 * `--allow-privileged` flag must be set to true for both the API server and the
-  kubelet
+  kubelet (default in some environemnts: GCE, GKE, etc.)
 * MountPropagation must be enabled (default to true since version 1.10)
 * (if you use Docker) the Docker daemon of the cluster nodes must allow shared
   mounts
   
-See [CSI Deploying](https://kubernetes-csi.github.io/docs/deploying.html) for more information.
+See [CSI Setup](https://kubernetes-csi.github.io/docs/Setup.html) for more information.
 
 ## Blockbridge Driver Configuration
 
@@ -153,8 +148,8 @@ Ensure you are authenticated to your Kubernetes cluster. A version will be print
 
 ```
 $ kubectl version
-Client Version: version.Info{Major:"1", Minor:"14", GitVersion:"v1.14.2", GitCommit:"66049e3b21efe110454d67df4fa62b08ea79a19b", GitTreeState:"clean", BuildDate:"2019-05-16T16:23:09Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
-Server Version: version.Info{Major:"1", Minor:"14+", GitVersion:"v1.14.3-docker-2", GitCommit:"7cfcb52617bf94c36953159ee9a2bf14c7fcc7ba", GitTreeState:"clean", BuildDate:"2019-06-06T16:18:13Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
+Client Version: version.Info{Major:"1", Minor:"10", GitVersion:"v1.10.3", GitCommit:"2bba0127d85d5a46ab4b778548be28623b32d0b0", GitTreeState:"clean", BuildDate:"2018-05-21T09:17:39Z", GoVersion:"go1.9.3", Compiler:"gc", Platform:"darwin/amd64"}
+Server Version: version.Info{Major:"1", Minor:"10", GitVersion:"v1.10.3", GitCommit:"2bba0127d85d5a46ab4b778548be28623b32d0b0", GitTreeState:"clean", BuildDate:"2018-05-21T09:05:37Z", GoVersion:"go1.9.3", Compiler:"gc", Platform:"linux/amd64"}
 ```
 
 NOTE: setting up `kubectl` authentication is beyond the scope of this guide. Please refer to your specific instructions for the Kubernetes service or installation you are using.
@@ -163,7 +158,7 @@ NOTE: setting up `kubectl` authentication is beyond the scope of this guide. Ple
 
 Create a secret containing the Blockbridge API endpoint URL and access token.
 
-Use BLOCKBRIDGE_API_HOST and BLOCKBRIDGE_API_KEY with the correct values for the Blockbridge controlplane, using the access token created in the **kubernetes** account.
+Replace BLOCKBRIDGE_API_URL and BLOCKBRIDGE_API_KEY with the correct values for the Blockbridge controlplane, using the access token created in the **kubernetes** account.
 
 *NOTE: While control traffic is always encrypted, we specify here to disable peer certificate verification using the `ssl-verify-peer` flag. This setting implicitly trusts the default controlplane self-signed certificate. Configuring certificate verification, including specifying custom-supplied CA certificates, is beyond the scope of this guide. Please contact [Blockbridge Support](mailto:support@blockbridge.com) for more information.*
 
@@ -175,8 +170,8 @@ metadata:
   name: blockbridge
   namespace: kube-system
 stringData:
-  api-url: "https://${BLOCKBRIDGE_API_HOST}/api"
-  access-token: "$BLOCKBRIDGE_API_KEY"
+  api-url: "{{ BLOCKBRIDGE_API_URL }}"
+  access-token: "{{ BLOCKBRIDGE_API_KEY }}"
   ssl-verify-peer: "false"
 EOF
 ```
@@ -220,30 +215,31 @@ NOTE: Choose a specific version as needed for your environment.
 | Blockbridge Driver | CSI Version | stability | kubernetes version | Deploy URL |
 | :---               | :---        | :---      | :---               | :---       |
 | 0.2.0              | 0.2.0       | beta      | v1.10, v1.11       | https://get.blockbridge.com/kubernetes/deploy/csi/v0.2.0/csi-blockbridge.yaml |
-| 1.0.0              | 1.0.0       | GA        | v1.14+             | https://get.blockbridge.com/kubernetes/deploy/csi/v1.0.0/csi-blockbridge.yaml |
 
 Apply the appropriate version of the driver:
 
 ```
-$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/v1.0.0/csi-blockbridge.yaml
+$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/v0.2.0/csi-blockbridge.yaml
 ```
 
 Confirm everything was created:
 
 ```
-csidriver.storage.k8s.io/eps.csi.blockbridge.com created
-storageclass.storage.k8s.io/blockbridge-gp created
-storageclass.storage.k8s.io/blockbridge-tls created
-statefulset.apps/csi-blockbridge-controller created
-serviceaccount/csi-blockbridge-controller-sa created
-clusterrole.rbac.authorization.k8s.io/csi-blockbridge-provisioner-role created
-clusterrolebinding.rbac.authorization.k8s.io/csi-blockbridge-provisioner-binding created
-clusterrole.rbac.authorization.k8s.io/csi-blockbridge-attacher-role created
-clusterrolebinding.rbac.authorization.k8s.io/csi-blockbridge-attacher-binding created
-daemonset.apps/csi-blockbridge-node created
-serviceaccount/csi-blockbridge-node-sa created
-clusterrole.rbac.authorization.k8s.io/csi-blockbridge-node-driver-registrar-role created
-clusterrolebinding.rbac.authorization.k8s.io/csi-blockbridge-node-driver-registrar-binding created
+storageclass.storage.k8s.io "blockbridge-gp" created
+serviceaccount "blockbridge-csi-attacher" created
+clusterrole.rbac.authorization.k8s.io "blockbridge-external-attacher-runner" created
+clusterrolebinding.rbac.authorization.k8s.io "blockbridge-csi-attacher-role" created
+service "csi-attacher-blockbridge" created
+statefulset.apps "csi-attacher-blockbridge" created
+serviceaccount "blockbridge-csi-provisioner" created
+clusterrole.rbac.authorization.k8s.io "blockbridge-external-provisioner-runner" created
+clusterrolebinding.rbac.authorization.k8s.io "blockbridge-csi-provisioner-role" created
+service "csi-provisioner-blockbridge" created
+statefulset.apps "csi-provisioner-blockbridge" created
+serviceaccount "csi-blockbridge" created
+clusterrole.rbac.authorization.k8s.io "csi-blockbridge" created
+clusterrolebinding.rbac.authorization.k8s.io "csi-blockbridge" created
+daemonset.apps "csi-blockbridge" created
 ```
 
 The Blockbridge CSI Driver is deployed using the [recommended mechanism](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md#recommended-mechanism-for-deploying-csi-drivers-on-kubernetes) of deploying CSI drivers on Kubernetes.
@@ -251,15 +247,16 @@ The Blockbridge CSI Driver is deployed using the [recommended mechanism](https:/
 ### Ensure Driver is Operational
 
 ```
-$ kubectl -n kube-system get pods -l role=csi-blockbridge
+$ kubectl -n kube-system get pods
 ```
 
 Blockbridge CSI pods are all Running:
 ```
-$ kubectl -n kube-system get pods -l role=csi-blockbridge
+$ kubectl get pods -n kube-system
 NAME                                    READY     STATUS    RESTARTS   AGE
-csi-blockbridge-controller-0            3/3       Running   0          6s
-csi-blockbridge-node-4679b              2/2       Running   0          5s
+csi-attacher-blockbridge-0              2/2       Running   0          6s
+csi-blockbridge-hcrr9                   2/2       Running   0          5s
+csi-provisioner-blockbridge-0           2/2       Running   0          6s
 ```
 
 ### Storage Classes
@@ -276,7 +273,7 @@ There are a variety of additional storage class configuration options available,
 Several example storage classes are shown in `csi-storageclass.yaml`. Download, edit, and apply additional storage classes as needed.
 
 ```
-$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/v1.0.0/csi-storageclass.yaml
+$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/v0.2.0/csi-storageclass.yaml
 $ cat csi-storageclass.yaml
 ###########################################################
 # StorageClass General Purpose (default)
@@ -347,8 +344,7 @@ Ensure the PVC was created successfully:
 $ kubectl get pvc csi-pvc-blockbridge
 ```
 ```
-NAME                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS     AGE
-csi-pvc-blockbridge   Bound    pvc-6cb93ab2-ec49-11e8-8b89-46facf8570bb   5Gi        RWO            blockbridge-gp   4s
+csi-pvc-blockbridge     Bound     pvc-6cb93ab2-ec49-11e8-8b89-46facf8570bb   5Gi        RWO            blockbridge-gp     4s
 ```
 
 ### Test and verify: Application
@@ -437,33 +433,6 @@ hello-world
 
 ## Troubleshooting
 
-### App stuck in ContainerCreating due to failed Mount
-
-#### Symptom
-Check the app status
-```
-$ kubectl get pod/blockbridge-demo
-NAME               READY   STATUS              RESTARTS   AGE
-blockbridge-demo   0/2     ContainerCreating   0          20s
-
-$ kubectl describe pod/blockbridge-dmo
-Events:
-  Type     Reason                  Age   From                            Message
-  ----     ------                  ----  ----                            -------
-  Normal   Scheduled               10s   default-scheduler               Successfully assigned default/blockbridge-demo to kubelet.localnet
-  Normal   SuccessfulAttachVolume  10s   attachdetach-controller         AttachVolume.Attach succeeded for volume "pvc-71c37e84-b302-11e9-a93f-0242ac110003"
-  Warning  FailedMount             1s    kubelet, kubelet.localnet       MountVolume.MountDevice failed for volume "pvc-71c37e84-b302-11e9-a93f-0242ac110003" : rpc error: code = Unknown desc = runtime_error: /etc/iscsi/initiatorname.iscsi not found; ensure 'iscsi-initiator-utils' is installed.
-```
-
-#### Resolution
-
-* Ensure the host running the kubelet has iSCSI client support installed on the host/node
-* For CentOS/RHEL, install: `iscsi-initiator-utils` package on the host/node running the kubelet.
-    * `yum install iscsi-initiator-utils`
-* For Ubuntu, install: `open-iscsi-utils` package on the host/node running the kubelet.
-    * `apt install open-iscsi-utils`
-* Delete/re-create the application pod to retry
-
 ### PVC unauthorized
 
 #### Symptom
@@ -485,9 +454,9 @@ Provisioning failed due to "unauthorized" because the authorization access token
 * create secret: `kubectl create -f secret.yml`
 * remove old configuration:
    * `kubectl delete -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml`
-   * `kubectl delete -f https://get.blockbridge.com/kubernetes/deploy/csi/v1.0.0/csi-blockbridge.yaml`
+   * `kubectl delete -f https://get.blockbridge.com/kubernetes/deploy/csi/v0.2.0/csi-blockbridge.yaml`
 * re-apply configuration:
-   * `kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/v1.0.0/csi-blockbridge.yaml`
+   * `kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/v0.2.0/csi-blockbridge.yaml`
    * `kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/examples/csi-pvc.yaml`
    
 ### PVC StorageClass not found
@@ -511,12 +480,12 @@ Error from server (NotFound): storageclasses.storage.k8s.io "blockbridge-gp" not
 
 * Create the storageclass: 
 ```
-$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/v1.0.0/csi-storageclass.yaml
+$ kubectl apply -f https://get.blockbridge.com/kubernetes/deploy/csi/v0.2.0/csi-storageclass.yaml
 ```
 
 * Alternatively, download and edit the desired storageclass:
 ```
-$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/v1.0.0/csi-storageclass.yaml
+$ curl -OsSL https://get.blockbridge.com/kubernetes/deploy/csi/v0.2.0/csi-storageclass.yaml
 $ edit csi-storageclass.yaml
 $ kubectl -f apply ./csi-storageclass.yaml
 ```
