@@ -117,8 +117,8 @@ The authorization (access token) is created.
 
 == Authorization: ATH4762194C4062668E
 serial                ATH4762194C4062668E                    
-account               kubernetes-srust2 (ACT0762194C40656F03)
-user                  kubernetes-srust2 (USR1B62194C40656FBD)
+account               kubernetes (ACT0762194C40656F03)
+user                  kubernetes (USR1B62194C40656FBD)
 enabled               yes                                    
 created at            2018-11-19 11:15:47 -0500              
 access type           online                                 
